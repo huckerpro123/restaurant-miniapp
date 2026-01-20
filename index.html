@@ -8,6 +8,9 @@
     <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <style>
         * {
             margin: 0;
@@ -458,6 +461,94 @@
         .filter-chip:hover {
             border-color: var(--gold);
         }
+    
+        /* NEW: Low Stock Modal */
+        .low-stock-list {
+            padding: 0;
+        }
+
+        .low-stock-item {
+            background: var(--bg-main);
+            border: 1px solid var(--danger);
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 12px;
+        }
+
+        .low-stock-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .low-stock-name {
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .low-stock-badge {
+            background: var(--danger);
+            color: white;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .low-stock-details {
+            display: flex;
+            justify-content: space-between;
+            font-size: 14px;
+            color: var(--text-secondary);
+        }
+
+        .stat-card.clickable {
+            cursor: pointer;
+        }
+
+        .stat-card.clickable:hover {
+            border-color: var(--gold);
+            transform: scale(1.02);
+        }
+
+        .chart-container {
+            padding: 20px;
+            background: var(--bg-card);
+            border-radius: 16px;
+            margin: 20px;
+        }
+
+        .chart-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--gold);
+            margin-bottom: 16px;
+            text-align: center;
+        }
+
+        .export-buttons {
+            display: flex;
+            gap: 12px;
+            padding: 0 20px 20px;
+        }
+
+        .export-btn {
+            flex: 1;
+            padding: 14px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            color: var(--text-primary);
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .export-btn:hover {
+            border-color: var(--gold);
+        }
     </style>
 </head>
 <body>
@@ -482,13 +573,61 @@
             const [selectedCategory, setSelectedCategory] = useState('all');
             const [showAddModal, setShowAddModal] = useState(false);
             const [editingProduct, setEditingProduct] = useState(null);
+            const [showLowStockModal, setShowLowStockModal] = useState(false);
             const [loading, setLoading] = useState(true);
             const observerRef = useRef();
 
             // Load products from Google Sheets
             useEffect(() => {
                 loadProducts();
-            }, []);
+            }, [])
+
+            // NEW: Chart initialization
+            useEffect(() => {
+                if (currentTab === 'stats' && products.length > 0) {
+                    setTimeout(() => {
+                        const canvas = document.getElementById('categoryChart');
+                        if (!canvas) return;
+                        
+                        const ctx = canvas.getContext('2d');
+                        
+                        if (window.categoryChartInstance) {
+                            window.categoryChartInstance.destroy();
+                        }
+                        
+                        const categoryData = categories.map(cat => 
+                            products.filter(p => p.category === cat).length
+                        );
+                        
+                        window.categoryChartInstance = new Chart(ctx, {
+                            type: 'doughnut',
+                            data: {
+                                labels: categories,
+                                datasets: [{
+                                    data: categoryData,
+                                    backgroundColor: [
+                                        'rgba(212, 175, 55, 0.8)',
+                                        'rgba(184, 148, 31, 0.8)',
+                                        'rgba(245, 230, 200, 0.8)',
+                                        'rgba(255, 215, 0, 0.8)'
+                                    ],
+                                    borderColor: 'rgba(212, 175, 55, 1)',
+                                    borderWidth: 2
+                                }]
+                            },
+                            options: {
+                                responsive: true,
+                                plugins: {
+                                    legend: {
+                                        position: 'bottom',
+                                        labels: { color: '#FFFFFF' }
+                                    }
+                                }
+                            }
+                        });
+                    }, 100);
+                }
+            }, [currentTab, products, categories]);;
 
             const loadProducts = async () => {
                 setLoading(true);
@@ -513,6 +652,53 @@
                 } finally {
                     setLoading(false);
                 }
+            };
+
+            // NEW: Export to Excel
+            const exportToExcel = () => {
+                const ws = XLSX.utils.json_to_sheet(products.map(p => ({
+                    'ID': p.id,
+                    'Название': p.name,
+                    'Категория': p.category,
+                    'Цена (€)': p.price,
+                    'Количество (кг)': p.quantity,
+                    'Всего (€)': (p.price * p.quantity).toFixed(2)
+                })));
+                const wb = XLSX.utils.book_new();
+                XLSX.utils.book_append_sheet(wb, ws, 'Продукты');
+                const date = new Date().toISOString().split('T')[0];
+                XLSX.writeFile(wb, `products_${date}.xlsx`);
+                tg.showPopup({ message: 'Excel файл скачан!', buttons: [{ type: 'ok' }] });
+            };
+
+            // NEW: Export to PDF
+            const exportToPDF = () => {
+                const { jsPDF } = window.jspdf;
+                const doc = new jsPDF();
+                
+                doc.setFont('helvetica', 'bold');
+                doc.setFontSize(16);
+                doc.text('Отчёт по продуктам', 20, 20);
+                
+                const date = new Date().toLocaleDateString('ru-RU');
+                doc.setFontSize(10);
+                doc.text(`Дата: ${date}`, 20, 30);
+                
+                let y = 45;
+                doc.setFont('helvetica', 'normal');
+                doc.setFontSize(9);
+                
+                products.forEach(p => {
+                    if (y > 270) {
+                        doc.addPage();
+                        y = 20;
+                    }
+                    doc.text(`${p.id}. ${p.name} - ${p.category} - ${p.price}€ - ${p.quantity}kg`, 20, y);
+                    y += 8;
+                });
+                
+                doc.save(`products_${new Date().toISOString().split('T')[0]}.pdf`);
+                tg.showPopup({ message: 'PDF файл скачан!', buttons: [{ type: 'ok' }] });
             };
 
             const handleAddProduct = (productData) => {
@@ -550,6 +736,10 @@
             };
 
             // Фильтрация продуктов
+            
+            // NEW: Low stock products
+            const lowStockProducts = products.filter(p => p.quantity < 10);
+
             const filteredProducts = products.filter(product => {
                 const matchesSearch = product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
                                     product.id.toString().includes(searchQuery);
@@ -625,7 +815,7 @@
                                             <div className="product-details">
                                                 <div className="product-detail">
                                                     <div className="detail-label">Цена</div>
-                                                    <div className="detail-value">{product.price} ₽</div>
+                                                    <div className="detail-value">{product.price} €</div>
                                                 </div>
                                                 <div className="product-detail">
                                                     <div className="detail-label">Количество</div>
@@ -675,7 +865,7 @@
                                 </div>
                                 <div className="stat-card">
                                     <div className="stat-value">{stats.totalValue.toLocaleString()}</div>
-                                    <div className="stat-label">Общая стоимость ₽</div>
+                                    <div className="stat-label">Общая стоимость €</div>
                                 </div>
                                 <div className="stat-card">
                                     <div className="stat-value" style={{color: stats.lowStock > 0 ? 'var(--danger)' : 'var(--success)'}}>
@@ -724,6 +914,43 @@
                             onDelete={editingProduct ? () => handleDeleteProduct(editingProduct.id) : null}
                             categories={categories}
                         />
+                    )}
+                
+
+                    {showLowStockModal && (
+                        <div className="modal-overlay" onClick={() => setShowLowStockModal(false)}>
+                            <div className="modal" onClick={(e) => e.stopPropagation()}>
+                                <div className="modal-header">
+                                    <div className="modal-title">⚠️ Низкие остатки (&lt; 10 кг)</div>
+                                    <button className="modal-close" onClick={() => setShowLowStockModal(false)}>×</button>
+                                </div>
+                                <div className="modal-body">
+                                    {lowStockProducts.length === 0 ? (
+                                        <div className="empty-state">
+                                            <div className="empty-icon">✅</div>
+                                            <div className="empty-text">Все остатки в норме!</div>
+                                        </div>
+                                    ) : (
+                                        <div className="low-stock-list">
+                                            {lowStockProducts.map(product => (
+                                                <div key={product.id} className="low-stock-item">
+                                                    <div className="low-stock-header">
+                                                        <div className="low-stock-name">{product.name}</div>
+                                                        <div className="low-stock-badge">
+                                                            {product.quantity} кг
+                                                        </div>
+                                                    </div>
+                                                    <div className="low-stock-details">
+                                                        <span>Категория: {product.category}</span>
+                                                        <span>Цена: {product.price} €</span>
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        </div>
                     )}
                 </>
             );
@@ -781,7 +1008,7 @@
                                 </select>
                             </div>
                             <div className="form-group">
-                                <label className="form-label">Цена (₽)</label>
+                                <label className="form-label">Цена (€)</label>
                                 <input
                                     type="number"
                                     className="form-input"
