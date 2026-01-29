@@ -3,10 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Управление продуктами</title>
+    <title>Система управления складом</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -19,7 +19,7 @@
         }
 
         :root {
-            --black: #000000;
+            --black: #0A0A0A;
             --gold: #D4AF37;
             --gold-dark: #B8941F;
             --gold-light: #F5E6C8;
@@ -31,6 +31,7 @@
             --success: #4CAF50;
             --danger: #F44336;
             --warning: #FF9800;
+            --blue: #2196F3;
         }
 
         body {
@@ -51,10 +52,17 @@
             position: sticky;
             top: 0;
             background: var(--bg-main);
-            border-bottom: 1px solid var(--border);
             padding: 16px 20px;
             z-index: 100;
             backdrop-filter: blur(10px);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .header-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
         }
 
         .header-title {
@@ -66,9 +74,29 @@
             background-clip: text;
         }
 
+        .notification-icon {
+            position: relative;
+            font-size: 24px;
+            cursor: pointer;
+            color: var(--gold);
+        }
+
+        .notification-badge {
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            background: var(--danger);
+            color: white;
+            border-radius: 10px;
+            padding: 2px 6px;
+            font-size: 10px;
+            font-weight: 700;
+        }
+
         /* Search */
         .search-container {
-            padding: 16px 20px;
+            padding: 0;
+            margin-top: 12px;
         }
 
         .search-input {
@@ -76,9 +104,9 @@
             background: var(--bg-card);
             border: 1px solid var(--border);
             border-radius: 12px;
-            padding: 14px 16px;
+            padding: 12px 16px 12px 40px;
             color: var(--text-primary);
-            font-size: 16px;
+            font-size: 14px;
             transition: all 0.3s;
         }
 
@@ -88,7 +116,90 @@
             box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.1);
         }
 
-        /* Product Cards */
+        .search-wrapper {
+            position: relative;
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-secondary);
+            font-size: 16px;
+        }
+
+        /* Home Cards */
+        .home-container {
+            padding: 20px;
+        }
+
+        .cards-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 16px;
+            margin-top: 20px;
+        }
+
+        .home-card {
+            background: var(--bg-card);
+            border: 2px solid var(--border);
+            border-radius: 20px;
+            padding: 24px 16px;
+            cursor: pointer;
+            transition: all 0.3s;
+            min-height: 160px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .home-card.gold-gradient {
+            background: linear-gradient(135deg, var(--gold-dark) 0%, var(--gold) 100%);
+            border-color: var(--gold);
+        }
+
+        .home-card.black-gold {
+            background: var(--bg-card);
+            border-color: var(--gold);
+        }
+
+        .home-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 24px rgba(212, 175, 55, 0.3);
+        }
+
+        .home-card-icon {
+            font-size: 48px;
+            margin-bottom: 12px;
+        }
+
+        .home-card.gold-gradient .home-card-icon {
+            filter: brightness(0) saturate(100%);
+        }
+
+        .home-card-title {
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+
+        .home-card.gold-gradient .home-card-title {
+            color: var(--black);
+        }
+
+        .home-card-subtitle {
+            font-size: 12px;
+            opacity: 0.7;
+        }
+
+        .home-card.gold-gradient .home-card-subtitle {
+            color: var(--black);
+        }
+
+        /* Products Container */
         .products-container {
             padding: 0 20px 20px;
         }
@@ -106,6 +217,10 @@
         .product-card:hover {
             border-color: var(--gold);
             transform: translateY(-2px);
+        }
+
+        .product-card.low-stock {
+            border-color: var(--danger);
         }
 
         .product-header {
@@ -158,6 +273,115 @@
             color: var(--gold);
         }
 
+        .detail-value.low {
+            color: var(--danger);
+        }
+
+        .product-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 12px;
+        }
+
+        .btn-action {
+            flex: 1;
+            padding: 8px 12px;
+            border-radius: 8px;
+            border: none;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-order {
+            background: var(--gold);
+            color: var(--black);
+        }
+
+        .btn-edit {
+            background: var(--bg-main);
+            color: var(--text-primary);
+            border: 1px solid var(--border);
+        }
+
+        /* Orders Table */
+        .orders-container {
+            padding: 0 20px 20px;
+        }
+
+        .order-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 16px;
+            margin-bottom: 12px;
+        }
+
+        .order-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .order-number {
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--gold);
+        }
+
+        .order-status {
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .order-status.new {
+            background: var(--blue);
+            color: white;
+        }
+
+        .order-status.processing {
+            background: var(--warning);
+            color: white;
+        }
+
+        .order-status.delivered {
+            background: var(--success);
+            color: white;
+        }
+
+        .order-status.paid {
+            background: var(--gold);
+            color: var(--black);
+        }
+
+        .order-items {
+            border-top: 1px solid var(--border);
+            padding-top: 12px;
+            margin-top: 12px;
+        }
+
+        .order-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            font-size: 14px;
+        }
+
+        .order-total {
+            display: flex;
+            justify-content: space-between;
+            padding-top: 12px;
+            margin-top: 12px;
+            border-top: 1px solid var(--border);
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--gold);
+        }
+
         /* Bottom Navigation */
         .bottom-nav {
             position: fixed;
@@ -199,7 +423,7 @@
             font-weight: 500;
         }
 
-        /* Add Button */
+        /* FAB */
         .fab {
             position: fixed;
             bottom: 80px;
@@ -224,90 +448,6 @@
             transform: scale(1.1);
             box-shadow: 0 6px 16px rgba(212, 175, 55, 0.6);
         }
-
-        .fab-history {
-            position: fixed;
-            bottom: 150px;
-            right: 20px;
-            width: 48px;
-            height: 48px;
-            background: var(--bg-card);
-            border: 2px solid var(--gold);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: var(--gold);
-            font-size: 24px;
-            cursor: pointer;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-            transition: all 0.3s;
-            z-index: 998;
-        }
-
-        .fab-history:hover {
-            transform: scale(1.1);
-            background: var(--gold);
-            color: var(--black);
-        }
-
-        .fab-history-list {
-            position: fixed;
-            bottom: 210px;
-            right: 20px;
-            width: 48px;
-            height: 48px;
-            background: var(--bg-card);
-            border: 2px solid var(--border);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: var(--text-secondary);
-            font-size: 20px;
-            cursor: pointer;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-            transition: all 0.3s;
-            border: none;
-            z-index: 998;
-        }
-
-        .fab-history-list:hover {
-            transform: scale(1.1);
-            border-color: var(--gold);
-        }
-
-        .history-item {
-            background: var(--bg-main);
-            border: 1px solid var(--border);
-            border-radius: 12px;
-            padding: 12px;
-            margin-bottom: 8px;
-        }
-
-        .history-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 6px;
-        }
-
-        .history-action {
-            font-size: 14px;
-            font-weight: 600;
-            color: var(--gold);
-        }
-
-        .history-time {
-            font-size: 12px;
-            color: var(--text-secondary);
-        }
-
-        .history-details {
-            font-size: 13px;
-            color: var(--text-secondary);
-        }
-
 
         /* Modal */
         .modal-overlay {
@@ -438,6 +578,12 @@
             border-radius: 16px;
             padding: 16px;
             text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .stat-card:hover {
+            border-color: var(--gold);
         }
 
         .stat-value {
@@ -450,70 +596,6 @@
         .stat-label {
             font-size: 12px;
             color: var(--text-secondary);
-        }
-
-        /* Categories */
-        .category-list {
-            padding: 20px;
-        }
-
-        .category-item {
-            background: var(--bg-card);
-            border: 1px solid var(--border);
-            border-radius: 12px;
-            padding: 16px;
-            margin-bottom: 12px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .category-name {
-            font-size: 16px;
-            font-weight: 600;
-        }
-
-        .category-count {
-            background: var(--gold);
-            color: var(--black);
-            padding: 4px 12px;
-            border-radius: 20px;
-            font-size: 14px;
-            font-weight: 600;
-        }
-
-        /* Animations */
-        @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
-        }
-
-        @keyframes slideUp {
-            from { transform: translateY(100%); }
-            to { transform: translateY(0); }
-        }
-
-        /* Loading */
-        .loading {
-            text-align: center;
-            padding: 40px;
-            color: var(--text-secondary);
-        }
-
-        .empty-state {
-            text-align: center;
-            padding: 60px 20px;
-        }
-
-        .empty-icon {
-            font-size: 64px;
-            margin-bottom: 16px;
-            opacity: 0.3;
-        }
-
-        .empty-text {
-            color: var(--text-secondary);
-            font-size: 16px;
         }
 
         /* Filters */
@@ -542,98 +624,62 @@
             border-color: var(--gold);
         }
 
-        .filter-chip:hover {
-            border-color: var(--gold);
-        }
-
-        /* NEW: Low Stock Modal */
-        .low-stock-list {
-            padding: 0;
-        }
-
-        .low-stock-item {
-            background: var(--bg-main);
-            border: 1px solid var(--danger);
-            border-radius: 12px;
-            padding: 16px;
-            margin-bottom: 12px;
-        }
-
-        .low-stock-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 8px;
-        }
-
-        .low-stock-name {
-            font-size: 16px;
-            font-weight: 600;
-        }
-
-        .low-stock-badge {
-            background: var(--danger);
-            color: white;
-            padding: 4px 12px;
-            border-radius: 12px;
-            font-size: 12px;
-            font-weight: 600;
-        }
-
-        .low-stock-details {
-            display: flex;
-            justify-content: space-between;
-            font-size: 14px;
+        /* Loading & Empty */
+        .loading {
+            text-align: center;
+            padding: 40px;
             color: var(--text-secondary);
         }
 
-        .stat-card.clickable {
-            cursor: pointer;
-        }
-
-        .stat-card.clickable:hover {
-            border-color: var(--gold);
-            transform: scale(1.02);
-        }
-
-        /* NEW: Chart Container */
-        .chart-container {
-            padding: 20px;
-            background: var(--bg-card);
-            border-radius: 16px;
-            margin: 20px;
-        }
-
-        .chart-title {
-            font-size: 18px;
-            font-weight: 600;
-            color: var(--gold);
-            margin-bottom: 16px;
+        .empty-state {
             text-align: center;
+            padding: 60px 20px;
         }
 
-        /* NEW: Export Buttons */
-        .export-buttons {
-            display: flex;
-            gap: 12px;
-            padding: 0 20px 20px;
+        .empty-icon {
+            font-size: 64px;
+            margin-bottom: 16px;
+            opacity: 0.3;
         }
 
-        .export-btn {
-            flex: 1;
-            padding: 14px;
-            background: var(--bg-card);
+        .empty-text {
+            color: var(--text-secondary);
+            font-size: 16px;
+        }
+
+        /* Autocomplete */
+        .autocomplete-dropdown {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: var(--bg-main);
             border: 1px solid var(--border);
-            border-radius: 12px;
-            color: var(--text-primary);
-            font-size: 14px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s;
+            border-top: none;
+            border-radius: 0 0 12px 12px;
+            max-height: 200px;
+            overflow-y: auto;
+            z-index: 10;
         }
 
-        .export-btn:hover {
-            border-color: var(--gold);
+        .autocomplete-item {
+            padding: 12px 16px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .autocomplete-item:hover {
+            background: var(--bg-card);
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes slideUp {
+            from { transform: translateY(100%); }
+            to { transform: translateY(0); }
         }
     </style>
 </head>
@@ -644,214 +690,87 @@
         const { useState, useEffect, useRef } = React;
 
         // API Configuration
-        const API_URL = 'https://percy-untrundled-unseraphically.ngrok-free.dev'; // Замени на URL твоего backend
+        const API_URL = 'https://percy-untrundled-unseraphically.ngrok-free.dev';
 
         // Telegram WebApp
         const tg = window.Telegram.WebApp;
         tg.expand();
         tg.ready();
 
+        // User Role (hardcoded for now - should come from backend)
+        const USER_ROLE = 'admin'; // 'admin' | 'manager' | 'viewer'
+
         function App() {
-            const [currentTab, setCurrentTab] = useState('products');
+            const [currentTab, setCurrentTab] = useState('home');
             const [products, setProducts] = useState([]);
+            const [orders, setOrders] = useState([]);
             const [categories, setCategories] = useState([]);
             const [searchQuery, setSearchQuery] = useState('');
             const [selectedCategory, setSelectedCategory] = useState('all');
             const [showAddModal, setShowAddModal] = useState(false);
+            const [showOrderModal, setShowOrderModal] = useState(false);
             const [editingProduct, setEditingProduct] = useState(null);
-            const [showLowStockModal, setShowLowStockModal] = useState(false);
-            const [history, setHistory] = useState([]);
-            const [showHistoryModal, setShowHistoryModal] = useState(false);
+            const [orderingProduct, setOrderingProduct] = useState(null);
             const [loading, setLoading] = useState(true);
-            const observerRef = useRef();
 
-            // Load products from Google Sheets
             useEffect(() => {
                 loadProducts();
+                loadOrders();
             }, []);
-
-            // NEW: Chart initialization
-            useEffect(() => {
-                if (currentTab === 'stats' && products.length > 0) {
-                    setTimeout(() => {
-                        const canvas = document.getElementById('categoryChart');
-                        if (!canvas) return;
-                        
-                        const ctx = canvas.getContext('2d');
-                        
-                        if (window.categoryChartInstance) {
-                            window.categoryChartInstance.destroy();
-                        }
-                        
-                        const categoryData = categories.map(cat => 
-                            products.filter(p => p.category === cat).length
-                        );
-                        
-                        window.categoryChartInstance = new Chart(ctx, {
-                            type: 'doughnut',
-                            data: {
-                                labels: categories,
-                                datasets: [{
-                                    data: categoryData,
-                                    backgroundColor: [
-                                        'rgba(212, 175, 55, 0.8)',
-                                        'rgba(184, 148, 31, 0.8)',
-                                        'rgba(245, 230, 200, 0.8)',
-                                        'rgba(255, 215, 0, 0.8)',
-                                        'rgba(218, 165, 32, 0.8)'
-                                    ],
-                                    borderColor: 'rgba(212, 175, 55, 1)',
-                                    borderWidth: 2
-                                }]
-                            },
-                            options: {
-                                responsive: true,
-                                maintainAspectRatio: true,
-                                plugins: {
-                                    legend: {
-                                        position: 'bottom',
-                                        labels: { 
-                                            color: '#FFFFFF',
-                                            padding: 15,
-                                            font: { size: 12 }
-                                        }
-                                    }
-                                }
-                            }
-                        });
-                    }, 100);
-                }
-            }, [currentTab, products, categories]);
 
             const loadProducts = async () => {
                 setLoading(true);
                 try {
-                    // Здесь будет запрос к твоему backend, который читает Google Sheets
-                    // Временно используем mock данные
+                    // Mock данные
                     const mockProducts = [
-                        { id: 1, name: 'Помидоры', category: 'Овощи', subcategory: 'Свежие', price: 150, quantity: 25, unit: 'кг' },
-                        { id: 2, name: 'Курица', category: 'Мясо', subcategory: 'Охлаждённое', price: 350, quantity: 10, unit: 'кг' },
-                        { id: 3, name: 'Картофель', category: 'Овощи', subcategory: 'Свежие', price: 80, quantity: 50, unit: 'кг' },
-                        { id: 4, name: 'Говядина', category: 'Мясо', subcategory: 'Охлаждённое', price: 550, quantity: 8, unit: 'кг' },
-                        { id: 5, name: 'Лук', category: 'Овощи', subcategory: 'Свежие', price: 60, quantity: 30, unit: 'кг' },
-                        { id: 6, name: 'Яйца', category: 'Молочное', subcategory: '', price: 5, quantity: 120, unit: 'шт' },
+                        { id: 1, name: 'Помидоры', category: 'Овощи', price: 150, quantity: 25, unit: 'кг' },
+                        { id: 2, name: 'Курица', category: 'Мясо', price: 350, quantity: 8, unit: 'кг' },
+                        { id: 3, name: 'Картофель', category: 'Овощи', price: 80, quantity: 50, unit: 'кг' },
+                        { id: 4, name: 'Говядина', category: 'Мясо', price: 550, quantity: 5, unit: 'кг' },
+                        { id: 5, name: 'Лук', category: 'Овощи', price: 60, quantity: 30, unit: 'кг' },
+                        { id: 6, name: 'Яйца', category: 'Молочное', price: 5, quantity: 120, unit: 'шт' },
                     ];
                     setProducts(mockProducts);
                     
-                    // Извлекаем уникальные категории
                     const uniqueCategories = [...new Set(mockProducts.map(p => p.category))];
                     setCategories(uniqueCategories);
                 } catch (error) {
                     console.error('Ошибка загрузки:', error);
-                    tg.showAlert('Ошибка загрузки данных');
                 } finally {
                     setLoading(false);
                 }
             };
 
-            // NEW: Export to Excel
-            const exportToExcel = () => {
-                const ws = XLSX.utils.json_to_sheet(products.map(p => ({
-                    'ID': p.id,
-                    'Название': p.name,
-                    'Категория': p.category,
-                    'Цена (€)': p.price,
-                    'Количество (кг)': p.quantity,
-                    'Всего (€)': (p.price * p.quantity).toFixed(2)
-                })));
-                const wb = XLSX.utils.book_new();
-                XLSX.utils.book_append_sheet(wb, ws, 'Продукты');
-                const date = new Date().toISOString().split('T')[0];
-                XLSX.writeFile(wb, `products_${date}.xlsx`);
-                tg.showPopup({ message: 'Excel файл скачан! ✅', buttons: [{ type: 'ok' }] });
-            };
-
-            // NEW: Export to PDF
-            const exportToPDF = () => {
-                const { jsPDF } = window.jspdf;
-                const doc = new jsPDF();
-                
-                doc.setFont('helvetica', 'bold');
-                doc.setFontSize(16);
-                doc.text('Отчёт по продуктам', 105, 20, { align: 'center' });
-                
-                const date = new Date().toLocaleDateString('ru-RU');
-                doc.setFontSize(10);
-                doc.setFont('helvetica', 'normal');
-                doc.text(`Дата: ${date}`, 20, 35);
-                
-                // Статистика
-                let y = 50;
-                doc.setFont('helvetica', 'bold');
-                doc.text('Статистика:', 20, y);
-                y += 8;
-                
-                doc.setFont('helvetica', 'normal');
-                doc.text(`Всего продуктов: ${products.length}`, 20, y);
-                y += 6;
-                
-                const totalValue = products.reduce((sum, p) => sum + (p.price * p.quantity), 0);
-                doc.text(`Общая стоимость: ${totalValue.toFixed(2)} €`, 20, y);
-                y += 6;
-                
-                const lowStock = products.filter(p => p.quantity < 10).length;
-                doc.text(`Низкие остатки: ${lowStock} шт.`, 20, y);
-                y += 15;
-                
-                // Таблица
-                doc.setFont('helvetica', 'bold');
-                doc.text('Список продуктов:', 20, y);
-                y += 10;
-                
-                doc.setFontSize(9);
-                doc.setFont('helvetica', 'normal');
-                
-                products.forEach((p, index) => {
-                    if (y > 270) {
-                        doc.addPage();
-                        y = 20;
-                    }
-                    const line = `${p.id}. ${p.name} | ${p.category} | ${p.price}€ | ${p.quantity}kg | Всего: ${(p.price * p.quantity).toFixed(2)}€`;
-                    doc.text(line, 20, y);
-                    y += 7;
-                });
-                
-                doc.save(`products_${new Date().toISOString().split('T')[0]}.pdf`);
-                tg.showPopup({ message: 'PDF файл скачан! ✅', buttons: [{ type: 'ok' }] });
-            };
-
-            // NEW: History management
-            const addToHistory = (action, data) => {
-                const historyEntry = {
-                    id: Date.now(),
-                    timestamp: new Date().toISOString(),
-                    action: action,
-                    data: JSON.parse(JSON.stringify(data)),
-                    user: 'Текущий пользователь'
-                };
-                setHistory([historyEntry, ...history].slice(0, 50)); // Храним последние 50 действий
-            };
-
-            const undoLastAction = () => {
-                if (history.length === 0) {
-                    tg.showAlert('История пуста');
-                    return;
+            const loadOrders = async () => {
+                try {
+                    // Mock данные заказов
+                    const mockOrders = [
+                        {
+                            id: 1,
+                            number: 'ORD-001',
+                            date: '2026-01-28',
+                            status: 'new',
+                            items: [
+                                { product: 'Помидоры', quantity: 50, unit: 'кг', price: 150 },
+                                { product: 'Лук', quantity: 30, unit: 'кг', price: 60 }
+                            ],
+                            total: 9300
+                        },
+                        {
+                            id: 2,
+                            number: 'ORD-002',
+                            date: '2026-01-27',
+                            status: 'processing',
+                            items: [
+                                { product: 'Курица', quantity: 20, unit: 'кг', price: 350 }
+                            ],
+                            total: 7000
+                        }
+                    ];
+                    setOrders(mockOrders);
+                } catch (error) {
+                    console.error('Ошибка загрузки заказов:', error);
                 }
-                
-                const lastAction = history[0];
-                
-                if (lastAction.action === 'add') {
-                    setProducts(products.filter(p => p.id !== lastAction.data.id));
-                } else if (lastAction.action === 'edit') {
-                    setProducts(products.map(p => 
-                        p.id === lastAction.data.oldData.id ? lastAction.data.oldData : p
-                    ));
-                } else if (lastAction.action === 'delete') {
-                    setProducts([...products, lastAction.data]);
-                }
-                
-                setHistory(history.slice(1));
-                tg.showPopup({ message: '✅ Действие отменено!', buttons: [{ type: 'ok' }] });
             };
 
             const handleAddProduct = (productData) => {
@@ -860,78 +779,48 @@
                     ...productData
                 };
                 setProducts([...products, newProduct]);
-                addToHistory('add', newProduct);
                 setShowAddModal(false);
-                tg.showPopup({
-                    message: 'Продукт добавлен!',
-                    buttons: [{ type: 'ok' }]
-                });
+                tg.showPopup({ message: 'Продукт добавлен!', buttons: [{ type: 'ok' }] });
             };
 
             const handleEditProduct = (productData) => {
-                const oldData = products.find(p => p.id === editingProduct.id);
+                if (USER_ROLE === 'viewer') {
+                    tg.showAlert('У вас нет прав на редактирование');
+                    return;
+                }
                 setProducts(products.map(p => 
                     p.id === editingProduct.id ? { ...p, ...productData } : p
                 ));
-                addToHistory('edit', { oldData, newData: productData });
                 setEditingProduct(null);
-                tg.showPopup({
-                    message: 'Продукт обновлён!',
-                    buttons: [{ type: 'ok' }]
-                });
+                tg.showPopup({ message: 'Продукт обновлён!', buttons: [{ type: 'ok' }] });
             };
 
             const handleDeleteProduct = (productId) => {
+                if (USER_ROLE !== 'admin') {
+                    tg.showAlert('Только администратор может удалять продукты');
+                    return;
+                }
                 tg.showConfirm('Удалить этот продукт?', (confirmed) => {
                     if (confirmed) {
-                        const deletedProduct = products.find(p => p.id === productId);
                         setProducts(products.filter(p => p.id !== productId));
-                        addToHistory('delete', deletedProduct);
                         setEditingProduct(null);
                     }
                 });
             };
 
-            // NEW: POS Sync - списание при продаже
-            const syncWithPOS = async (productId, soldQuantity) => {
-                try {
-                    const product = products.find(p => p.id === productId);
-                    if (!product) return;
-                    
-                    const newQuantity = product.quantity - soldQuantity;
-                    if (newQuantity < 0) {
-                        tg.showAlert(`Недостаточно товара! Доступно: ${product.quantity} ${product.unit || 'кг'}`);
-                        return;
-                    }
-                    
-                    const oldData = {...product};
-                    const updatedProduct = { ...product, quantity: newQuantity };
-                    
-                    setProducts(products.map(p => 
-                        p.id === productId ? updatedProduct : p
-                    ));
-                    
-                    addToHistory('pos_sync', { oldData, newData: updatedProduct, soldQuantity });
-                    
-                    // Здесь отправка на backend
-                    // await fetch(`${API_URL}/api/products/${productId}`, {
-                    //     method: 'PUT',
-                    //     body: JSON.stringify(updatedProduct)
-                    // });
-                    
-                    tg.showPopup({ 
-                        message: `Списано: ${soldQuantity} ${product.unit || 'кг'}`, 
-                        buttons: [{ type: 'ok' }] 
-                    });
-                } catch (error) {
-                    console.error('POS sync error:', error);
-                    tg.showAlert('Ошибка синхронизации с кассой');
-                }
+            const handleCreateOrder = (orderData) => {
+                const newOrder = {
+                    id: orders.length + 1,
+                    number: `ORD-${String(orders.length + 1).padStart(3, '0')}`,
+                    date: new Date().toISOString().split('T')[0],
+                    status: 'new',
+                    ...orderData
+                };
+                setOrders([newOrder, ...orders]);
+                setShowOrderModal(false);
+                setOrderingProduct(null);
+                tg.showPopup({ message: 'Заказ создан!', buttons: [{ type: 'ok' }] });
             };
-
-            // Фильтрация продуктов
-            // NEW: Low stock products
-            const lowStockProducts = products.filter(p => p.quantity < 10);
 
             const filteredProducts = products.filter(product => {
                 const matchesSearch = product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -940,30 +829,97 @@
                 return matchesSearch && matchesCategory;
             });
 
-            // Статистика
+            const lowStockProducts = products.filter(p => p.quantity < 10);
+
             const stats = {
                 total: products.length,
                 categories: categories.length,
                 totalValue: products.reduce((sum, p) => sum + (p.price * p.quantity), 0),
-                lowStock: products.filter(p => p.quantity < 10).length
+                lowStock: lowStockProducts.length
+            };
+
+            const getStatusText = (status) => {
+                const statusMap = {
+                    'new': 'Новый',
+                    'processing': 'В обработке',
+                    'delivered': 'Доставлен',
+                    'paid': 'Оплачен'
+                };
+                return statusMap[status] || status;
             };
 
             return (
                 <>
-                    {currentTab === 'products' && (
-                        <>
-                            <div className="header">
-                                <div className="header-title">📦 Продукты</div>
+                    {/* Header */}
+                    <div className="header">
+                        <div className="header-top">
+                            <div className="header-title">
+                                {currentTab === 'home' && '🏠 Главное меню'}
+                                {currentTab === 'warehouse' && '📦 Склад'}
+                                {currentTab === 'orders' && '🛒 Закупки'}
                             </div>
-                            <div className="search-container">
+                            <div className="notification-icon" onClick={() => tg.showAlert(`Низкий остаток: ${stats.lowStock} шт.`)}>
+                                🔔
+                                {stats.lowStock > 0 && (
+                                    <span className="notification-badge">{stats.lowStock}</span>
+                                )}
+                            </div>
+                        </div>
+                        <div className="search-container">
+                            <div className="search-wrapper">
+                                <span className="search-icon">🔍</span>
                                 <input
                                     type="text"
                                     className="search-input"
-                                    placeholder="🔍 Поиск по ID или названию..."
+                                    placeholder="Поиск..."
                                     value={searchQuery}
                                     onChange={(e) => setSearchQuery(e.target.value)}
                                 />
                             </div>
+                        </div>
+                    </div>
+
+                    {/* Home Cards */}
+                    {currentTab === 'home' && (
+                        <div className="home-container">
+                            <div className="cards-grid">
+                                <div className="home-card gold-gradient" onClick={() => setCurrentTab('warehouse')}>
+                                    <div className="home-card-icon">📦</div>
+                                    <div>
+                                        <div className="home-card-title">Склад</div>
+                                        <div className="home-card-subtitle">{stats.total} продуктов</div>
+                                    </div>
+                                </div>
+                                <div className="home-card black-gold" onClick={() => setCurrentTab('orders')}>
+                                    <div className="home-card-icon">🛒</div>
+                                    <div>
+                                        <div className="home-card-title">Закупки</div>
+                                        <div className="home-card-subtitle">{orders.length} заказов</div>
+                                    </div>
+                                </div>
+                                <div className="home-card gold-gradient" onClick={() => tg.showAlert('Статистика в разработке')}>
+                                    <div className="home-card-icon">📊</div>
+                                    <div>
+                                        <div className="home-card-title">Статистика</div>
+                                        <div className="home-card-subtitle">Отчёты и графики</div>
+                                    </div>
+                                </div>
+                                {USER_ROLE === 'admin' && (
+                                    <div className="home-card black-gold" onClick={() => tg.showAlert('Управление командой в разработке')}>
+                                        <div className="home-card-icon">👥</div>
+                                        <div>
+                                            <div className="home-card-title">Команда</div>
+                                            <div className="home-card-subtitle">Управление</div>
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Warehouse */}
+                    {currentTab === 'warehouse' && (
+                        <>
                             <div className="filters">
                                 <div
                                     className={`filter-chip ${selectedCategory === 'all' ? 'active' : ''}`}
@@ -995,13 +951,12 @@
                                     filteredProducts.map(product => (
                                         <div
                                             key={product.id}
-                                            className="product-card"
-                                            onClick={() => setEditingProduct(product)}
+                                            className={`product-card ${product.quantity < 10 ? 'low-stock' : ''}`}
                                         >
                                             <div className="product-header">
                                                 <div>
                                                     <div className="product-name">{product.name}</div>
-                                                    <div className="product-id">ID: {product.id} {product.subcategory && `• ${product.subcategory}`}</div>
+                                                    <div className="product-id">ID: {product.id}</div>
                                                 </div>
                                                 <div className="product-category">{product.category}</div>
                                             </div>
@@ -1011,88 +966,71 @@
                                                     <div className="detail-value">{product.price} €</div>
                                                 </div>
                                                 <div className="product-detail">
-                                                    <div className="detail-label">Количество</div>
+                                                    <div className="detail-label">Остаток</div>
                                                     <div className={`detail-value ${product.quantity < 10 ? 'low' : ''}`}>
-                                                        {product.quantity} {product.unit || 'кг'}
+                                                        {product.quantity} {product.unit}
                                                     </div>
                                                 </div>
+                                            </div>
+                                            <div className="product-actions">
+                                                <button className="btn-action btn-order" onClick={() => {
+                                                    setOrderingProduct(product);
+                                                    setShowOrderModal(true);
+                                                }}>
+                                                    🛒 Заказать
+                                                </button>
+                                                {USER_ROLE !== 'viewer' && (
+                                                    <button className="btn-action btn-edit" onClick={() => setEditingProduct(product)}>
+                                                        ✏️ Изменить
+                                                    </button>
+                                                )}
                                             </div>
                                         </div>
                                     ))
                                 )}
                             </div>
-                            <button className="fab" onClick={() => setShowAddModal(true)}>+</button>
-                            {history.length > 0 && (
-                                <button className="fab-history" onClick={undoLastAction} title="Отменить последнее действие">
-                                    ↶
-                                </button>
+                            {USER_ROLE !== 'viewer' && (
+                                <button className="fab" onClick={() => setShowAddModal(true)}>+</button>
                             )}
-                            <button className="fab-history-list" onClick={() => setShowHistoryModal(true)} title="История изменений">
-                                📜
-                            </button>
                         </>
                     )}
 
-                    {currentTab === 'categories' && (
+                    {/* Orders */}
+                    {currentTab === 'orders' && (
                         <>
-                            <div className="header">
-                                <div className="header-title">📂 Категории</div>
-                            </div>
-                            <div className="category-list">
-                                {categories.map(category => {
-                                    const count = products.filter(p => p.category === category).length;
-                                    return (
-                                        <div key={category} className="category-item">
-                                            <div className="category-name">{category}</div>
-                                            <div className="category-count">{count}</div>
-                                        </div>
-                                    );
-                                })}
-                            </div>
-                        </>
-                    )}
-
-                    {currentTab === 'stats' && (
-                        <>
-                            <div className="header">
-                                <div className="header-title">📊 Статистика</div>
-                            </div>
-                            <div className="stats-grid">
-                                <div className="stat-card">
-                                    <div className="stat-value">{stats.total}</div>
-                                    <div className="stat-label">Всего продуктов</div>
-                                </div>
-                                <div className="stat-card">
-                                    <div className="stat-value">{stats.categories}</div>
-                                    <div className="stat-label">Категорий</div>
-                                </div>
-                                <div className="stat-card">
-                                    <div className="stat-value">{stats.totalValue.toLocaleString()}</div>
-                                    <div className="stat-label">Общая стоимость €</div>
-                                </div>
-                                <div 
-                                    className="stat-card clickable" 
-                                    onClick={() => setShowLowStockModal(true)}
-                                >
-                                    <div className="stat-value" style={{color: stats.lowStock > 0 ? 'var(--danger)' : 'var(--success)'}}>
-                                        {stats.lowStock}
+                            <div className="orders-container">
+                                {orders.length === 0 ? (
+                                    <div className="empty-state">
+                                        <div className="empty-icon">🛒</div>
+                                        <div className="empty-text">Нет заказов</div>
                                     </div>
-                                    <div className="stat-label">⚠️ Низкий остаток</div>
-                                </div>
-                            </div>
-
-                            <div className="chart-container">
-                                <div className="chart-title">📈 Распределение по категориям</div>
-                                <canvas id="categoryChart" style={{maxHeight: '300px'}}></canvas>
-                            </div>
-
-                            <div className="export-buttons">
-                                <button className="export-btn" onClick={exportToExcel}>
-                                    📊 Экспорт Excel
-                                </button>
-                                <button className="export-btn" onClick={exportToPDF}>
-                                    📄 Экспорт PDF
-                                </button>
+                                ) : (
+                                    orders.map(order => (
+                                        <div key={order.id} className="order-card">
+                                            <div className="order-header">
+                                                <div className="order-number">#{order.number}</div>
+                                                <div className={`order-status ${order.status}`}>
+                                                    {getStatusText(order.status)}
+                                                </div>
+                                            </div>
+                                            <div style={{fontSize: '12px', color: 'var(--text-secondary)', marginBottom: '12px'}}>
+                                                {new Date(order.date).toLocaleDateString('ru-RU')}
+                                            </div>
+                                            <div className="order-items">
+                                                {order.items.map((item, idx) => (
+                                                    <div key={idx} className="order-item">
+                                                        <span>{item.product} × {item.quantity} {item.unit}</span>
+                                                        <span>{(item.quantity * item.price).toFixed(2)} €</span>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                            <div className="order-total">
+                                                <span>Итого:</span>
+                                                <span>{order.total.toFixed(2)} €</span>
+                                            </div>
+                                        </div>
+                                    ))
+                                )}
                             </div>
                         </>
                     )}
@@ -1100,29 +1038,29 @@
                     {/* Bottom Navigation */}
                     <div className="bottom-nav">
                         <button
-                            className={`nav-item ${currentTab === 'products' ? 'active' : ''}`}
-                            onClick={() => setCurrentTab('products')}
+                            className={`nav-item ${currentTab === 'warehouse' ? 'active' : ''}`}
+                            onClick={() => setCurrentTab('warehouse')}
                         >
                             <div className="nav-icon">📦</div>
-                            <div className="nav-label">Продукты</div>
+                            <div className="nav-label">Склад</div>
                         </button>
                         <button
-                            className={`nav-item ${currentTab === 'categories' ? 'active' : ''}`}
-                            onClick={() => setCurrentTab('categories')}
+                            className={`nav-item ${currentTab === 'orders' ? 'active' : ''}`}
+                            onClick={() => setCurrentTab('orders')}
                         >
-                            <div className="nav-icon">📂</div>
-                            <div className="nav-label">Категории</div>
+                            <div className="nav-icon">🛒</div>
+                            <div className="nav-label">Закупки</div>
                         </button>
                         <button
-                            className={`nav-item ${currentTab === 'stats' ? 'active' : ''}`}
-                            onClick={() => setCurrentTab('stats')}
+                            className={`nav-item ${currentTab === 'home' ? 'active' : ''}`}
+                            onClick={() => setCurrentTab('home')}
                         >
-                            <div className="nav-icon">📊</div>
-                            <div className="nav-label">Статистика</div>
+                            <div className="nav-icon">🏠</div>
+                            <div className="nav-label">Главное</div>
                         </button>
                     </div>
 
-                    {/* Add/Edit Modal */}
+                    {/* Modals */}
                     {(showAddModal || editingProduct) && (
                         <ProductModal
                             product={editingProduct}
@@ -1133,130 +1071,54 @@
                             }}
                             onDelete={editingProduct ? () => handleDeleteProduct(editingProduct.id) : null}
                             categories={categories}
+                            userRole={USER_ROLE}
                         />
                     )}
 
-                    {showLowStockModal && (
-                        <div className="modal-overlay" onClick={() => setShowLowStockModal(false)}>
-                            <div className="modal" onClick={(e) => e.stopPropagation()}>
-                                <div className="modal-header">
-                                    <div className="modal-title">⚠️ Низкие остатки (&lt; 10 кг)</div>
-                                    <button className="modal-close" onClick={() => setShowLowStockModal(false)}>×</button>
-                                </div>
-                                <div className="modal-body">
-                                    {lowStockProducts.length === 0 ? (
-                                        <div className="empty-state">
-                                            <div className="empty-icon">✅</div>
-                                            <div className="empty-text">Все остатки в норме!</div>
-                                        </div>
-                                    ) : (
-                                        <div className="low-stock-list">
-                                            {lowStockProducts.map(product => (
-                                                <div key={product.id} className="low-stock-item">
-                                                    <div className="low-stock-header">
-                                                        <div className="low-stock-name">{product.name}</div>
-                                                        <div className="low-stock-badge">
-                                                            {product.quantity} кг
-                                                        </div>
-                                                    </div>
-                                                    <div className="low-stock-details">
-                                                        <span>Категория: {product.category}</span>
-                                                        <span>Цена: {product.price} €</span>
-                                                    </div>
-                                                </div>
-                                            ))}
-                                        </div>
-                                    )}
-                                </div>
-                            </div>
-                        </div>
-                    )}
-
-                    {showHistoryModal && (
-                        <div className="modal-overlay" onClick={() => setShowHistoryModal(false)}>
-                            <div className="modal" onClick={(e) => e.stopPropagation()}>
-                                <div className="modal-header">
-                                    <div className="modal-title">📜 История изменений</div>
-                                    <button className="modal-close" onClick={() => setShowHistoryModal(false)}>×</button>
-                                </div>
-                                <div className="modal-body">
-                                    {history.length === 0 ? (
-                                        <div className="empty-state">
-                                            <div className="empty-icon">📭</div>
-                                            <div className="empty-text">История пуста</div>
-                                        </div>
-                                    ) : (
-                                        <div>
-                                            {history.map(entry => {
-                                                const time = new Date(entry.timestamp).toLocaleString('ru-RU', {
-                                                    day: '2-digit',
-                                                    month: '2-digit',
-                                                    hour: '2-digit',
-                                                    minute: '2-digit'
-                                                });
-                                                
-                                                let actionText = '';
-                                                let details = '';
-                                                
-                                                if (entry.action === 'add') {
-                                                    actionText = '➕ Добавлен';
-                                                    details = `${entry.data.name} (${entry.data.category})`;
-                                                } else if (entry.action === 'edit') {
-                                                    actionText = '✏️ Изменён';
-                                                    details = `${entry.data.oldData.name}`;
-                                                } else if (entry.action === 'delete') {
-                                                    actionText = '🗑 Удалён';
-                                                    details = `${entry.data.name} (${entry.data.category})`;
-                                                } else if (entry.action === 'pos_sync') {
-                                                    actionText = '🏪 Списано';
-                                                    details = `${entry.data.oldData.name}: -${entry.data.soldQuantity} ${entry.data.oldData.unit || 'кг'}`;
-                                                }
-                                                
-                                                return (
-                                                    <div key={entry.id} className="history-item">
-                                                        <div className="history-header">
-                                                            <div className="history-action">{actionText}</div>
-                                                            <div className="history-time">{time}</div>
-                                                        </div>
-                                                        <div className="history-details">{details}</div>
-                                                    </div>
-                                                );
-                                            })}
-                                        </div>
-                                    )}
-                                </div>
-                            </div>
-                        </div>
+                    {showOrderModal && (
+                        <OrderModal
+                            product={orderingProduct}
+                            onSave={handleCreateOrder}
+                            onClose={() => {
+                                setShowOrderModal(false);
+                                setOrderingProduct(null);
+                            }}
+                        />
                     )}
                 </>
             );
         }
 
-        function ProductModal({ product, onSave, onClose, onDelete, categories }) {
+        function ProductModal({ product, onSave, onClose, onDelete, categories, userRole }) {
             const [formData, setFormData] = useState(product || {
                 name: '',
                 category: '',
-                subcategory: '',
                 price: '',
                 quantity: '',
                 unit: 'кг'
             });
+            const [showAutocomplete, setShowAutocomplete] = useState(false);
+            const [categoryInput, setCategoryInput] = useState(product?.category || '');
 
             const handleSubmit = (e) => {
                 e.preventDefault();
-                if (!formData.name || !formData.category || !formData.price || !formData.quantity) {
+                if (!formData.name || !categoryInput || !formData.price || !formData.quantity) {
                     tg.showAlert('Заполните все поля');
                     return;
                 }
-                onSave(formData);
+                onSave({...formData, category: categoryInput});
             };
+
+            const filteredCategories = categories.filter(cat => 
+                cat.toLowerCase().includes(categoryInput.toLowerCase())
+            );
 
             return (
                 <div className="modal-overlay" onClick={onClose}>
                     <div className="modal" onClick={(e) => e.stopPropagation()}>
                         <div className="modal-header">
                             <div className="modal-title">
-                                {product ? '✏️ €едактировать' : '➕ Добавить продукт'}
+                                {product ? '✏️ Редактировать' : '➕ Добавить продукт'}
                             </div>
                             <button className="modal-close" onClick={onClose}>×</button>
                         </div>
@@ -1271,29 +1133,35 @@
                                     placeholder="Например: Помидоры"
                                 />
                             </div>
-                            <div className="form-group">
+                            <div className="form-group" style={{position: 'relative'}}>
                                 <label className="form-label">Категория</label>
-                                <select
-                                    className="form-select"
-                                    value={formData.category}
-                                    onChange={(e) => setFormData({...formData, category: e.target.value})}
-                                >
-                                    <option value="">Выберите категорию</option>
-                                    {categories.map(cat => (
-                                        <option key={cat} value={cat}>{cat}</option>
-                                    ))}
-                                    <option value="__new__">+ Создать новую</option>
-                                </select>
-                            </div>
-                            <div className="form-group">
-                                <label className="form-label">Подкатегория (опционально)</label>
                                 <input
                                     type="text"
                                     className="form-input"
-                                    value={formData.subcategory || ''}
-                                    onChange={(e) => setFormData({...formData, subcategory: e.target.value})}
-                                    placeholder="Например: Свежие, Замороженные"
+                                    value={categoryInput}
+                                    onChange={(e) => {
+                                        setCategoryInput(e.target.value);
+                                        setShowAutocomplete(true);
+                                    }}
+                                    onFocus={() => setShowAutocomplete(true)}
+                                    placeholder="Введите или выберите категорию"
                                 />
+                                {showAutocomplete && categoryInput && filteredCategories.length > 0 && (
+                                    <div className="autocomplete-dropdown">
+                                        {filteredCategories.map(cat => (
+                                            <div
+                                                key={cat}
+                                                className="autocomplete-item"
+                                                onClick={() => {
+                                                    setCategoryInput(cat);
+                                                    setShowAutocomplete(false);
+                                                }}
+                                            >
+                                                {cat}
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
                             </div>
                             <div className="form-group">
                                 <label className="form-label">Цена (€)</label>
@@ -1333,7 +1201,7 @@
                             <button type="submit" className="btn btn-primary">
                                 {product ? 'Сохранить изменения' : 'Добавить продукт'}
                             </button>
-                            {product && onDelete && (
+                            {product && onDelete && userRole === 'admin' && (
                                 <button type="button" className="btn btn-danger" onClick={onDelete}>
                                     🗑 Удалить продукт
                                 </button>
@@ -1344,7 +1212,148 @@
             );
         }
 
-        // Render App
+        function OrderModal({ product, onSave, onClose }) {
+            const [formData, setFormData] = useState({
+                items: product ? [{
+                    product: product.name,
+                    quantity: '',
+                    unit: product.unit,
+                    price: product.price
+                }] : [{
+                    product: '',
+                    quantity: '',
+                    unit: 'кг',
+                    price: ''
+                }],
+            });
+
+            const handleSubmit = (e) => {
+                e.preventDefault();
+                const total = formData.items.reduce((sum, item) => 
+                    sum + (parseFloat(item.quantity) * parseFloat(item.price)), 0
+                );
+                onSave({
+                    items: formData.items,
+                    total: total
+                });
+            };
+
+            const addItem = () => {
+                setFormData({
+                    ...formData,
+                    items: [...formData.items, { product: '', quantity: '', unit: 'кг', price: '' }]
+                });
+            };
+
+            const removeItem = (index) => {
+                const newItems = formData.items.filter((_, i) => i !== index);
+                setFormData({...formData, items: newItems});
+            };
+
+            const updateItem = (index, field, value) => {
+                const newItems = [...formData.items];
+                newItems[index][field] = value;
+                setFormData({...formData, items: newItems});
+            };
+
+            const total = formData.items.reduce((sum, item) => 
+                sum + (parseFloat(item.quantity || 0) * parseFloat(item.price || 0)), 0
+            );
+
+            return (
+                <div className="modal-overlay" onClick={onClose}>
+                    <div className="modal" onClick={(e) => e.stopPropagation()}>
+                        <div className="modal-header">
+                            <div className="modal-title">🛒 Новый заказ</div>
+                            <button className="modal-close" onClick={onClose}>×</button>
+                        </div>
+                        <form onSubmit={handleSubmit} className="modal-body">
+                            {formData.items.map((item, index) => (
+                                <div key={index} style={{marginBottom: '20px', padding: '16px', background: 'var(--bg-main)', borderRadius: '12px'}}>
+                                    <div style={{display: 'flex', justifyContent: 'space-between', marginBottom: '12px'}}>
+                                        <span style={{fontWeight: 600}}>Товар {index + 1}</span>
+                                        {formData.items.length > 1 && (
+                                            <button type="button" onClick={() => removeItem(index)} style={{background: 'none', border: 'none', color: 'var(--danger)', cursor: 'pointer'}}>
+                                                ✕
+                                            </button>
+                                        )}
+                                    </div>
+                                    <div className="form-group">
+                                        <label className="form-label">Продукт</label>
+                                        <input
+                                            type="text"
+                                            className="form-input"
+                                            value={item.product}
+                                            onChange={(e) => updateItem(index, 'product', e.target.value)}
+                                            placeholder="Название продукта"
+                                            disabled={product}
+                                        />
+                                    </div>
+                                    <div className="form-group">
+                                        <label className="form-label">Количество</label>
+                                        <div style={{display: 'flex', gap: '12px'}}>
+                                            <input
+                                                type="number"
+                                                className="form-input"
+                                                style={{flex: 2}}
+                                                value={item.quantity}
+                                                onChange={(e) => updateItem(index, 'quantity', e.target.value)}
+                                                placeholder="0"
+                                            />
+                                            <select
+                                                className="form-select"
+                                                style={{flex: 1}}
+                                                value={item.unit}
+                                                onChange={(e) => updateItem(index, 'unit', e.target.value)}
+                                            >
+                                                <option value="кг">кг</option>
+                                                <option value="шт">шт</option>
+                                                <option value="л">л</option>
+                                                <option value="г">г</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div className="form-group">
+                                        <label className="form-label">Цена (€)</label>
+                                        <input
+                                            type="number"
+                                            className="form-input"
+                                            value={item.price}
+                                            onChange={(e) => updateItem(index, 'price', e.target.value)}
+                                            placeholder="0"
+                                            disabled={product}
+                                        />
+                                    </div>
+                                    {item.quantity && item.price && (
+                                        <div style={{textAlign: 'right', color: 'var(--gold)', fontWeight: 600}}>
+                                            Сумма: {(item.quantity * item.price).toFixed(2)} €
+                                        </div>
+                                    )}
+                                </div>
+                            ))}
+                            
+                            {!product && (
+                                <button type="button" onClick={addItem} style={{width: '100%', padding: '12px', background: 'var(--bg-main)', border: '1px dashed var(--border)', borderRadius: '12px', color: 'var(--text-primary)', cursor: 'pointer', marginBottom: '20px'}}>
+                                    + Добавить товар
+                                </button>
+                            )}
+
+                            <div style={{padding: '16px', background: 'var(--bg-main)', borderRadius: '12px', marginBottom: '20px'}}>
+                                <div style={{display: 'flex', justifyContent: 'space-between', fontSize: '18px', fontWeight: 700, color: 'var(--gold)'}}>
+                                    <span>Итого:</span>
+                                    <span>{total.toFixed(2)} €</span>
+                                </div>
+                            </div>
+
+                            <button type="submit" className="btn btn-primary">
+                                Создать заказ
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            );
+        }
+
         const root = ReactDOM.createRoot(document.getElementById('root'));
         root.render(<App />);
     </script>
