@@ -8,9 +8,6 @@
     <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <style>
         * {
             margin: 0;
@@ -30,14 +27,12 @@
             --border: #2A2A2A;
             --success: #4CAF50;
             --danger: #F44336;
-            --warning: #FF9800;
         }
 
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             background: var(--bg-main);
             color: var(--text-primary);
-            overflow-x: hidden;
             -webkit-font-smoothing: antialiased;
         }
 
@@ -46,7 +41,7 @@
             padding-bottom: 70px;
         }
 
-        /* Header with Logo */
+        /* Header (только лого, без поиска) */
         .header {
             position: sticky;
             top: 0;
@@ -57,13 +52,6 @@
             border-bottom: 1px solid var(--border);
         }
 
-        .header-top {
-            display: flex;
-            align-items: center;
-            gap: 16px;
-            margin-bottom: 12px;
-        }
-
         .logo {
             font-size: 24px;
             font-weight: 900;
@@ -71,7 +59,7 @@
             background: linear-gradient(135deg, var(--gold) 0%, var(--gold-light) 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
-            background-clip: text;
+            text-align: center;
         }
 
         .logo-subtitle {
@@ -82,65 +70,7 @@
             margin-top: -4px;
         }
 
-        .search-wrapper {
-            flex: 1;
-            position: relative;
-        }
-
-        .search-input {
-            width: 100%;
-            background: var(--bg-card);
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            padding: 10px 16px;
-            color: var(--text-primary);
-            font-size: 14px;
-            transition: all 0.3s;
-        }
-
-        .search-input:focus {
-            outline: none;
-            border-color: var(--gold);
-            box-shadow: 0 0 0 2px rgba(212, 175, 55, 0.1);
-        }
-
-        .autocomplete-dropdown {
-            position: absolute;
-            top: 100%;
-            left: 0;
-            right: 0;
-            background: var(--bg-card);
-            border: 1px solid var(--border);
-            border-top: none;
-            border-radius: 0 0 8px 8px;
-            max-height: 200px;
-            overflow-y: auto;
-            z-index: 200;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-        }
-
-        .autocomplete-item {
-            padding: 12px 16px;
-            cursor: pointer;
-            transition: all 0.2s;
-            border-bottom: 1px solid var(--border);
-        }
-
-        .autocomplete-item:last-child {
-            border-bottom: none;
-        }
-
-        .autocomplete-item:hover {
-            background: var(--bg-main);
-            color: var(--gold);
-        }
-
-        .autocomplete-highlight {
-            color: var(--gold);
-            font-weight: 600;
-        }
-
-        /* Home Menu Cards */
+        /* Home Menu */
         .home-container {
             padding: 20px;
         }
@@ -152,7 +82,6 @@
 
         .menu-grid.three-buttons {
             grid-template-columns: repeat(2, 1fr);
-            grid-template-rows: auto auto;
         }
 
         .menu-grid.three-buttons .menu-card:last-child {
@@ -161,12 +90,10 @@
 
         .menu-grid.four-buttons {
             grid-template-columns: repeat(2, 1fr);
-            grid-template-rows: auto auto;
         }
 
         .menu-card {
             background: linear-gradient(135deg, var(--gold-dark), var(--gold));
-            border: none;
             border-radius: 16px;
             padding: 32px 20px;
             cursor: pointer;
@@ -189,7 +116,7 @@
             color: var(--black);
         }
 
-        /* Warehouse Table (Google Sheets style) */
+        /* Warehouse Table */
         .warehouse-container {
             padding: 0 20px 20px;
         }
@@ -243,7 +170,6 @@
             font-weight: 700;
             color: var(--gold);
             text-transform: uppercase;
-            letter-spacing: 0.5px;
             border-bottom: 2px solid var(--border);
             white-space: nowrap;
         }
@@ -256,10 +182,6 @@
             transition: all 0.2s;
         }
 
-        .data-table tr:last-child td {
-            border-bottom: none;
-        }
-
         .data-table tr:hover td {
             background: rgba(212, 175, 55, 0.05);
         }
@@ -269,10 +191,6 @@
             outline: 1px solid var(--gold);
         }
 
-        .data-table td.editing {
-            padding: 0;
-        }
-
         .cell-input {
             width: 100%;
             background: var(--bg-main);
@@ -280,10 +198,6 @@
             padding: 12px;
             color: var(--text-primary);
             font-size: 14px;
-        }
-
-        .cell-input:focus {
-            outline: none;
         }
 
         .category-badge {
@@ -310,26 +224,147 @@
             font-family: 'Courier New', monospace;
         }
 
-        /* Orders / Procurement */
+        /* Orders Container */
         .orders-container {
             padding: 20px;
         }
 
-        .forecast-panel {
-            background: var(--bg-card);
-            border: 1px solid var(--border);
-            border-radius: 16px;
-            padding: 20px;
-            margin-bottom: 20px;
-        }
-
-        .forecast-title {
-            font-size: 16px;
+        .section-title {
+            font-size: 20px;
             font-weight: 700;
             color: var(--gold);
             margin-bottom: 16px;
         }
 
+        /* Filters */
+        .filters {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 16px;
+            overflow-x: auto;
+        }
+
+        .filter-chip {
+            padding: 8px 16px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 600;
+            white-space: nowrap;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .filter-chip.active {
+            background: linear-gradient(135deg, var(--gold-dark), var(--gold));
+            color: var(--black);
+            border-color: var(--gold);
+        }
+
+        /* Order Card */
+        .order-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 12px;
+        }
+
+        .order-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .order-number {
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--gold);
+        }
+
+        .order-checkbox {
+            width: 24px;
+            height: 24px;
+            cursor: pointer;
+        }
+
+        .order-items {
+            margin: 12px 0;
+            padding-left: 16px;
+        }
+
+        .order-item {
+            font-size: 14px;
+            margin-bottom: 4px;
+        }
+
+        .order-footer {
+            font-size: 12px;
+            color: var(--text-secondary);
+            display: flex;
+            justify-content: space-between;
+            margin-top: 8px;
+        }
+
+        .order-timer {
+            color: var(--danger);
+            font-weight: 600;
+        }
+
+        /* Accordion */
+        .accordion {
+            margin-top: 32px;
+            border-top: 2px solid var(--border);
+            padding-top: 20px;
+        }
+
+        .accordion-item {
+            margin-bottom: 12px;
+        }
+
+        .accordion-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .accordion-header:hover {
+            border-color: var(--gold);
+        }
+
+        .accordion-title {
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .accordion-icon {
+            font-size: 20px;
+            transition: transform 0.3s;
+        }
+
+        .accordion-icon.expanded {
+            transform: rotate(180deg);
+        }
+
+        .accordion-content {
+            padding: 16px;
+            display: none;
+        }
+
+        .accordion-content.expanded {
+            display: block;
+        }
+
+        /* Forecast */
         .forecast-options {
             display: flex;
             gap: 12px;
@@ -339,7 +374,7 @@
         .forecast-btn {
             flex: 1;
             padding: 10px;
-            background: var(--bg-main);
+            background: var(--bg-card);
             border: 1px solid var(--border);
             border-radius: 8px;
             color: var(--text-primary);
@@ -360,9 +395,6 @@
             background: var(--bg-main);
             border-radius: 8px;
             border-left: 4px solid var(--gold);
-        }
-
-        .forecast-text {
             font-size: 14px;
             line-height: 1.6;
         }
@@ -372,40 +404,7 @@
             font-weight: 700;
         }
 
-        .low-stock-list {
-            margin-top: 20px;
-        }
-
-        .low-stock-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 12px;
-        }
-
-        .low-stock-title {
-            font-size: 16px;
-            font-weight: 700;
-            color: var(--danger);
-        }
-
-        .order-all-btn {
-            padding: 10px 20px;
-            background: linear-gradient(135deg, var(--gold-dark), var(--gold));
-            color: var(--black);
-            border: none;
-            border-radius: 8px;
-            font-size: 14px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s;
-        }
-
-        .order-all-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(212, 175, 55, 0.4);
-        }
-
+        /* Low Stock List */
         .low-stock-item {
             background: var(--bg-card);
             border: 1px solid var(--danger);
@@ -417,14 +416,9 @@
             align-items: center;
         }
 
-        .low-stock-info {
-            flex: 1;
-        }
-
         .low-stock-name {
             font-size: 16px;
             font-weight: 600;
-            margin-bottom: 4px;
         }
 
         .low-stock-details {
@@ -440,7 +434,7 @@
             font-weight: 700;
         }
 
-        /* Bottom Navigation (no emoji) */
+        /* Bottom Nav */
         .bottom-nav {
             position: fixed;
             bottom: 0;
@@ -456,47 +450,19 @@
 
         .nav-item {
             flex: 1;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
+            text-align: center;
             padding: 8px;
             color: var(--text-secondary);
             cursor: pointer;
-            transition: all 0.3s;
             border: none;
             background: none;
             font-size: 13px;
             font-weight: 600;
+            transition: all 0.3s;
         }
 
         .nav-item.active {
             color: var(--gold);
-        }
-
-        /* FAB for Quick Order */
-        .fab {
-            position: fixed;
-            bottom: 80px;
-            right: 20px;
-            width: 56px;
-            height: 56px;
-            background: linear-gradient(135deg, var(--gold-dark), var(--gold));
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: var(--black);
-            font-size: 28px;
-            cursor: pointer;
-            box-shadow: 0 4px 12px rgba(212, 175, 55, 0.4);
-            transition: all 0.3s;
-            border: none;
-            z-index: 999;
-        }
-
-        .fab:hover {
-            transform: scale(1.1);
-            box-shadow: 0 6px 16px rgba(212, 175, 55, 0.6);
         }
 
         /* Modal */
@@ -546,24 +512,73 @@
             color: var(--text-secondary);
             font-size: 28px;
             cursor: pointer;
-            padding: 0;
-            width: 32px;
-            height: 32px;
         }
 
         .modal-body {
             padding: 20px;
         }
 
-        .form-group {
+        /* Order Form */
+        .search-box {
+            position: relative;
             margin-bottom: 20px;
+        }
+
+        .search-input {
+            width: 100%;
+            background: var(--bg-main);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 12px 16px;
+            color: var(--text-primary);
+            font-size: 14px;
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: var(--gold);
+        }
+
+        .quick-select {
+            margin-bottom: 20px;
+        }
+
+        .quick-select-title {
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 12px;
+            color: var(--text-secondary);
+        }
+
+        .quick-chips {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .quick-chip {
+            padding: 8px 16px;
+            background: var(--bg-main);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .quick-chip:hover {
+            border-color: var(--gold);
+            color: var(--gold);
+        }
+
+        .form-group {
+            margin-bottom: 16px;
         }
 
         .form-label {
             display: block;
             font-size: 14px;
             font-weight: 600;
-            color: var(--text-primary);
             margin-bottom: 8px;
         }
 
@@ -576,14 +591,11 @@
             padding: 12px 16px;
             color: var(--text-primary);
             font-size: 14px;
-            transition: all 0.3s;
         }
 
-        .form-input:focus,
-        .form-select:focus {
-            outline: none;
-            border-color: var(--gold);
-            box-shadow: 0 0 0 2px rgba(212, 175, 55, 0.1);
+        .form-row {
+            display: flex;
+            gap: 12px;
         }
 
         .btn {
@@ -602,31 +614,44 @@
             color: var(--black);
         }
 
-        .btn-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(212, 175, 55, 0.4);
-        }
-
-        .btn-danger {
-            background: var(--danger);
-            color: white;
+        .btn-secondary {
+            background: var(--bg-main);
+            color: var(--text-primary);
+            border: 1px solid var(--border);
             margin-top: 12px;
         }
 
-        .loading {
-            text-align: center;
-            padding: 40px;
-            color: var(--text-secondary);
+        .current-order {
+            margin: 20px 0;
+            padding: 16px;
+            background: var(--bg-main);
+            border-radius: 8px;
+            border-left: 4px solid var(--gold);
         }
 
+        .current-order-title {
+            font-size: 14px;
+            font-weight: 700;
+            margin-bottom: 12px;
+            color: var(--gold);
+        }
+
+        .current-order-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .current-order-item:last-child {
+            border-bottom: none;
+        }
+
+        .loading,
         .empty-state {
             text-align: center;
-            padding: 60px 20px;
-        }
-
-        .empty-text {
+            padding: 40px 20px;
             color: var(--text-secondary);
-            font-size: 16px;
         }
 
         @keyframes fadeIn {
@@ -644,34 +669,43 @@
     <div id="root"></div>
 
     <script type="text/babel">
-        const { useState, useEffect, useRef } = React;
+        const { useState, useEffect } = React;
 
-        // API Configuration
         const API_URL = 'https://percy-untrundled-unseraphically.ngrok-free.app';
-
-        // Telegram WebApp
         const tg = window.Telegram.WebApp;
         tg.expand();
         tg.ready();
 
-        // User Role
-        const USER_ROLE = 'admin'; // 'admin' | 'manager' | 'viewer'
+        const USER_ROLE = 'admin';
 
         function App() {
             const [currentTab, setCurrentTab] = useState('home');
             const [warehouseTab, setWarehouseTab] = useState('all');
             const [products, setProducts] = useState([]);
+            const [orders, setOrders] = useState([]);
             const [categories, setCategories] = useState([]);
             const [searchQuery, setSearchQuery] = useState('');
-            const [showAutocomplete, setShowAutocomplete] = useState(false);
             const [editingCell, setEditingCell] = useState(null);
-            const [showQuickOrder, setShowQuickOrder] = useState(false);
+            const [showOrderModal, setShowOrderModal] = useState(false);
+            const [currentOrder, setCurrentOrder] = useState([]);
+            const [orderForm, setOrderForm] = useState({ product: '', quantity: '', unit: 'кг' });
+            const [categoryFilter, setCategoryFilter] = useState('all');
             const [forecastDays, setForecastDays] = useState(3);
+            const [forecastExpanded, setForecastExpanded] = useState(false);
+            const [lowStockExpanded, setLowStockExpanded] = useState(false);
             const [loading, setLoading] = useState(true);
 
             useEffect(() => {
                 loadProducts();
+                loadOrders();
             }, []);
+
+            useEffect(() => {
+                const interval = setInterval(() => {
+                    checkExpiredOrders();
+                }, 60000); // Каждую минуту
+                return () => clearInterval(interval);
+            }, [orders]);
 
             const loadProducts = async () => {
                 setLoading(true);
@@ -686,7 +720,6 @@
                         { id: 7, name: 'Молоко', category: 'Молочное', price: 80, quantity: 7, unit: 'л', dailyUsage: 4 },
                     ];
                     setProducts(mockProducts);
-                    
                     const uniqueCategories = [...new Set(mockProducts.map(p => p.category))];
                     setCategories(uniqueCategories);
                 } catch (error) {
@@ -696,6 +729,18 @@
                 }
             };
 
+            const loadOrders = () => {
+                const savedOrders = localStorage.getItem('grand_orders');
+                if (savedOrders) {
+                    setOrders(JSON.parse(savedOrders));
+                }
+            };
+
+            const saveOrders = (newOrders) => {
+                localStorage.setItem('grand_orders', JSON.stringify(newOrders));
+                setOrders(newOrders);
+            };
+
             const handleCellEdit = (productId, field, value) => {
                 setProducts(products.map(p => 
                     p.id === productId ? { ...p, [field]: value } : p
@@ -703,42 +748,106 @@
                 setEditingCell(null);
             };
 
-            const handleQuickOrder = () => {
-                const lowStock = products.filter(p => p.quantity < 10);
-                if (lowStock.length === 0) {
-                    tg.showAlert('Нет продуктов с низкими остатками');
-                    return;
+            const handleQuickSelect = (productName) => {
+                const product = products.find(p => p.name === productName);
+                if (product) {
+                    setOrderForm({ product: product.name, quantity: '', unit: product.unit });
                 }
-                setShowQuickOrder(true);
             };
 
-            const handleOrderAll = () => {
-                const lowStock = products.filter(p => p.quantity < 10);
-                const totalCost = lowStock.reduce((sum, p) => sum + (p.price * (p.dailyUsage * forecastDays - p.quantity)), 0);
-                tg.showConfirm(
-                    `Заказать ${lowStock.length} позиций на сумму ${totalCost.toFixed(2)} €?`,
-                    (confirmed) => {
-                        if (confirmed) {
-                            tg.showPopup({ message: 'Заказ создан!', buttons: [{ type: 'ok' }] });
-                        }
+            const handleAddToOrder = () => {
+                if (!orderForm.product || !orderForm.quantity) {
+                    tg.showAlert('Заполните все поля');
+                    return;
+                }
+                const newItem = { ...orderForm, id: Date.now() };
+                setCurrentOrder([...currentOrder, newItem]);
+                setOrderForm({ product: '', quantity: '', unit: 'кг' });
+            };
+
+            const handleRemoveFromOrder = (itemId) => {
+                setCurrentOrder(currentOrder.filter(item => item.id !== itemId));
+            };
+
+            const handleCreateOrder = () => {
+                if (currentOrder.length === 0) {
+                    tg.showAlert('Добавьте товары в заказ');
+                    return;
+                }
+                
+                const orderCategories = [...new Set(currentOrder.map(item => {
+                    const product = products.find(p => p.name === item.product);
+                    return product ? product.category : 'Другое';
+                }))];
+
+                const newOrder = {
+                    id: Date.now(),
+                    number: `ORD-${String(orders.length + 1).padStart(3, '0')}`,
+                    items: currentOrder,
+                    categories: orderCategories,
+                    createdAt: new Date().toISOString(),
+                    completed: false,
+                    completedAt: null
+                };
+
+                saveOrders([newOrder, ...orders]);
+                setCurrentOrder([]);
+                setShowOrderModal(false);
+                tg.showPopup({ message: 'Заказ создан!', buttons: [{ type: 'ok' }] });
+            };
+
+            const handleToggleComplete = (orderId) => {
+                const updatedOrders = orders.map(order => {
+                    if (order.id === orderId) {
+                        return {
+                            ...order,
+                            completed: !order.completed,
+                            completedAt: !order.completed ? new Date().toISOString() : null
+                        };
                     }
-                );
+                    return order;
+                });
+                saveOrders(updatedOrders);
+            };
+
+            const checkExpiredOrders = () => {
+                const now = new Date().getTime();
+                const filteredOrders = orders.filter(order => {
+                    if (order.completed && order.completedAt) {
+                        const completedTime = new Date(order.completedAt).getTime();
+                        const hoursPassed = (now - completedTime) / (1000 * 60 * 60);
+                        return hoursPassed < 24;
+                    }
+                    return true;
+                });
+                
+                if (filteredOrders.length !== orders.length) {
+                    saveOrders(filteredOrders);
+                }
+            };
+
+            const getTimeRemaining = (completedAt) => {
+                if (!completedAt) return null;
+                const now = new Date().getTime();
+                const completedTime = new Date(completedAt).getTime();
+                const hoursPassed = (now - completedTime) / (1000 * 60 * 60);
+                const hoursRemaining = Math.max(0, 24 - hoursPassed);
+                return Math.floor(hoursRemaining);
             };
 
             const filteredProducts = products.filter(product => {
                 if (!searchQuery) return true;
                 const query = searchQuery.toLowerCase();
                 return product.name.toLowerCase().includes(query) ||
-                       product.category.toLowerCase().includes(query) ||
-                       product.id.toString().includes(query);
+                       product.category.toLowerCase().includes(query);
             });
 
-            const autocompleteResults = searchQuery ? 
-                filteredProducts.slice(0, 5).map(p => p.name) : [];
-
             const lowStockProducts = products.filter(p => p.quantity < 10);
-
             const displayProducts = warehouseTab === 'low' ? lowStockProducts : filteredProducts;
+
+            const filteredOrders = categoryFilter === 'all' 
+                ? orders 
+                : orders.filter(order => order.categories.includes(categoryFilter));
 
             const getForecast = () => {
                 const results = lowStockProducts.map(p => {
@@ -751,60 +860,11 @@
 
             const forecastResults = getForecast();
 
-            const highlightMatch = (text, query) => {
-                if (!query) return text;
-                const index = text.toLowerCase().indexOf(query.toLowerCase());
-                if (index === -1) return text;
-                return (
-                    <>
-                        {text.substring(0, index)}
-                        <span className="autocomplete-highlight">
-                            {text.substring(index, index + query.length)}
-                        </span>
-                        {text.substring(index + query.length)}
-                    </>
-                );
-            };
-
             return (
                 <>
                     <div className="header">
-                        <div className="header-top">
-                            <div>
-                                <div className="logo">GRAND</div>
-                                <div className="logo-subtitle">RESTAURANT</div>
-                            </div>
-                            <div className="search-wrapper">
-                                <input
-                                    type="text"
-                                    className="search-input"
-                                    placeholder="Поиск..."
-                                    value={searchQuery}
-                                    onChange={(e) => {
-                                        setSearchQuery(e.target.value);
-                                        setShowAutocomplete(e.target.value.length > 0);
-                                    }}
-                                    onFocus={() => setShowAutocomplete(searchQuery.length > 0)}
-                                    onBlur={() => setTimeout(() => setShowAutocomplete(false), 200)}
-                                />
-                                {showAutocomplete && autocompleteResults.length > 0 && (
-                                    <div className="autocomplete-dropdown">
-                                        {autocompleteResults.map((name, idx) => (
-                                            <div
-                                                key={idx}
-                                                className="autocomplete-item"
-                                                onClick={() => {
-                                                    setSearchQuery(name);
-                                                    setShowAutocomplete(false);
-                                                }}
-                                            >
-                                                {highlightMatch(name, searchQuery)}
-                                            </div>
-                                        ))}
-                                    </div>
-                                )}
-                            </div>
-                        </div>
+                        <div className="logo">GRAND</div>
+                        <div className="logo-subtitle">RESTAURANT</div>
                     </div>
 
                     {/* Home Menu */}
@@ -822,7 +882,7 @@
                                         <div className="menu-card-title">Редактировать</div>
                                     </div>
                                 )}
-                                <div className="menu-card" onClick={handleQuickOrder}>
+                                <div className="menu-card" onClick={() => setShowOrderModal(true)}>
                                     <div className="menu-card-title">Заказать</div>
                                 </div>
                             </div>
@@ -849,12 +909,6 @@
                             <div className="warehouse-container">
                                 {loading ? (
                                     <div className="loading">Загрузка...</div>
-                                ) : displayProducts.length === 0 ? (
-                                    <div className="empty-state">
-                                        <div className="empty-text">
-                                            {warehouseTab === 'low' ? 'Нет продуктов с низкими остатками' : 'Нет продуктов'}
-                                        </div>
-                                    </div>
                                 ) : (
                                     <div className="table-wrapper">
                                         <table className="data-table">
@@ -883,19 +937,11 @@
                                                                     defaultValue={product.name}
                                                                     autoFocus
                                                                     onBlur={(e) => handleCellEdit(product.id, 'name', e.target.value)}
-                                                                    onKeyDown={(e) => {
-                                                                        if (e.key === 'Enter') {
-                                                                            handleCellEdit(product.id, 'name', e.target.value);
-                                                                        }
-                                                                    }}
+                                                                    onKeyDown={(e) => e.key === 'Enter' && handleCellEdit(product.id, 'name', e.target.value)}
                                                                 />
-                                                            ) : (
-                                                                product.name
-                                                            )}
+                                                            ) : product.name}
                                                         </td>
-                                                        <td>
-                                                            <span className="category-badge">{product.category}</span>
-                                                        </td>
+                                                        <td><span className="category-badge">{product.category}</span></td>
                                                         <td
                                                             className={USER_ROLE !== 'viewer' ? 'editable' : ''}
                                                             onClick={() => USER_ROLE !== 'viewer' && setEditingCell({ id: product.id, field: 'price' })}
@@ -907,15 +953,9 @@
                                                                     defaultValue={product.price}
                                                                     autoFocus
                                                                     onBlur={(e) => handleCellEdit(product.id, 'price', parseFloat(e.target.value))}
-                                                                    onKeyDown={(e) => {
-                                                                        if (e.key === 'Enter') {
-                                                                            handleCellEdit(product.id, 'price', parseFloat(e.target.value));
-                                                                        }
-                                                                    }}
+                                                                    onKeyDown={(e) => e.key === 'Enter' && handleCellEdit(product.id, 'price', parseFloat(e.target.value))}
                                                                 />
-                                                            ) : (
-                                                                product.price
-                                                            )}
+                                                            ) : product.price}
                                                         </td>
                                                         <td
                                                             className={`quantity-cell ${product.quantity < 10 ? 'low' : ''} ${USER_ROLE !== 'viewer' ? 'editable' : ''}`}
@@ -928,15 +968,9 @@
                                                                     defaultValue={product.quantity}
                                                                     autoFocus
                                                                     onBlur={(e) => handleCellEdit(product.id, 'quantity', parseFloat(e.target.value))}
-                                                                    onKeyDown={(e) => {
-                                                                        if (e.key === 'Enter') {
-                                                                            handleCellEdit(product.id, 'quantity', parseFloat(e.target.value));
-                                                                        }
-                                                                    }}
+                                                                    onKeyDown={(e) => e.key === 'Enter' && handleCellEdit(product.id, 'quantity', parseFloat(e.target.value))}
                                                                 />
-                                                            ) : (
-                                                                product.quantity
-                                                            )}
+                                                            ) : product.quantity}
                                                         </td>
                                                         <td>{product.unit}</td>
                                                     </tr>
@@ -949,134 +983,243 @@
                         </>
                     )}
 
-                    {/* Orders / Procurement */}
+                    {/* Orders */}
                     {currentTab === 'orders' && (
                         <div className="orders-container">
-                            <div className="forecast-panel">
-                                <div className="forecast-title">Прогноз остатков</div>
-                                <div className="forecast-options">
-                                    <button
-                                        className={`forecast-btn ${forecastDays === 3 ? 'active' : ''}`}
-                                        onClick={() => setForecastDays(3)}
-                                    >
-                                        3 дня
-                                    </button>
-                                    <button
-                                        className={`forecast-btn ${forecastDays === 5 ? 'active' : ''}`}
-                                        onClick={() => setForecastDays(5)}
-                                    >
-                                        5 дней
-                                    </button>
-                                    <button
-                                        className={`forecast-btn ${forecastDays === 7 ? 'active' : ''}`}
-                                        onClick={() => setForecastDays(7)}
-                                    >
-                                        7 дней
-                                    </button>
+                            <div className="section-title">Созданные заказы</div>
+                            
+                            <div className="filters">
+                                <div
+                                    className={`filter-chip ${categoryFilter === 'all' ? 'active' : ''}`}
+                                    onClick={() => setCategoryFilter('all')}
+                                >
+                                    Все
                                 </div>
-                                <div className="forecast-result">
-                                    <div className="forecast-text">
-                                        На складе <span className="forecast-highlight">{lowStockProducts.length}</span> продуктов с низкими остатками.
-                                        <br/>
-                                        При текущем потреблении запасов хватит на{' '}
-                                        <span className="forecast-highlight">
-                                            {Math.min(...forecastResults.map(r => r.daysRemaining))} дней
-                                        </span>.
-                                        <br/>
-                                        Для работы {forecastDays} дней необходимо заказать на сумму{' '}
-                                        <span className="forecast-highlight">
-                                            {forecastResults.reduce((sum, r) => sum + (r.needToOrder * r.price), 0).toFixed(2)} €
-                                        </span>.
+                                {categories.map(cat => (
+                                    <div
+                                        key={cat}
+                                        className={`filter-chip ${categoryFilter === cat ? 'active' : ''}`}
+                                        onClick={() => setCategoryFilter(cat)}
+                                    >
+                                        {cat}
                                     </div>
-                                </div>
+                                ))}
                             </div>
 
-                            <div className="low-stock-list">
-                                <div className="low-stock-header">
-                                    <div className="low-stock-title">Требуется заказать</div>
-                                    {lowStockProducts.length > 0 && (
-                                        <button className="order-all-btn" onClick={handleOrderAll}>
-                                            Заказать всё
-                                        </button>
-                                    )}
-                                </div>
-                                {lowStockProducts.length === 0 ? (
-                                    <div className="empty-state">
-                                        <div className="empty-text">Все остатки в норме</div>
-                                    </div>
-                                ) : (
-                                    forecastResults.map(item => (
-                                        <div key={item.id} className="low-stock-item">
-                                            <div className="low-stock-info">
-                                                <div className="low-stock-name">{item.name}</div>
-                                                <div className="low-stock-details">
-                                                    {item.category} • Осталось на {item.daysRemaining} дней • Нужно заказать: {item.needToOrder} {item.unit}
-                                                </div>
-                                            </div>
-                                            <div className="low-stock-quantity">
-                                                {item.quantity} {item.unit}
-                                            </div>
+                            {filteredOrders.length === 0 ? (
+                                <div className="empty-state">Нет заказов</div>
+                            ) : (
+                                filteredOrders.map(order => (
+                                    <div key={order.id} className="order-card">
+                                        <div className="order-header">
+                                            <div className="order-number">#{order.number}</div>
+                                            <input
+                                                type="checkbox"
+                                                className="order-checkbox"
+                                                checked={order.completed}
+                                                onChange={() => handleToggleComplete(order.id)}
+                                            />
                                         </div>
-                                    ))
-                                )}
+                                        <div className="order-items">
+                                            {order.items.map((item, idx) => (
+                                                <div key={idx} className="order-item">
+                                                    • {item.product} - {item.quantity} {item.unit}
+                                                </div>
+                                            ))}
+                                        </div>
+                                        <div className="order-footer">
+                                            <span>Создан: {new Date(order.createdAt).toLocaleString('ru-RU', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</span>
+                                            {order.completed && order.completedAt && (
+                                                <span className="order-timer">
+                                                    Удалится через: {getTimeRemaining(order.completedAt)} ч
+                                                </span>
+                                            )}
+                                        </div>
+                                    </div>
+                                ))
+                            )}
+
+                            {/* Accordions */}
+                            <div className="accordion">
+                                <div className="accordion-item">
+                                    <div className="accordion-header" onClick={() => setForecastExpanded(!forecastExpanded)}>
+                                        <div className="accordion-title">Прогноз остатков</div>
+                                        <div className={`accordion-icon ${forecastExpanded ? 'expanded' : ''}`}>▼</div>
+                                    </div>
+                                    <div className={`accordion-content ${forecastExpanded ? 'expanded' : ''}`}>
+                                        <div className="forecast-options">
+                                            <button
+                                                className={`forecast-btn ${forecastDays === 3 ? 'active' : ''}`}
+                                                onClick={() => setForecastDays(3)}
+                                            >
+                                                3 дня
+                                            </button>
+                                            <button
+                                                className={`forecast-btn ${forecastDays === 5 ? 'active' : ''}`}
+                                                onClick={() => setForecastDays(5)}
+                                            >
+                                                5 дней
+                                            </button>
+                                            <button
+                                                className={`forecast-btn ${forecastDays === 7 ? 'active' : ''}`}
+                                                onClick={() => setForecastDays(7)}
+                                            >
+                                                7 дней
+                                            </button>
+                                        </div>
+                                        <div className="forecast-result">
+                                            На складе <span className="forecast-highlight">{lowStockProducts.length}</span> продуктов с низкими остатками.
+                                            <br/>
+                                            При текущем потреблении запасов хватит на{' '}
+                                            <span className="forecast-highlight">
+                                                {forecastResults.length > 0 ? Math.min(...forecastResults.map(r => r.daysRemaining)) : 0} дней
+                                            </span>.
+                                            <br/>
+                                            Для работы {forecastDays} дней необходимо заказать на сумму{' '}
+                                            <span className="forecast-highlight">
+                                                {forecastResults.reduce((sum, r) => sum + (r.needToOrder * r.price), 0).toFixed(2)} €
+                                            </span>.
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div className="accordion-item">
+                                    <div className="accordion-header" onClick={() => setLowStockExpanded(!lowStockExpanded)}>
+                                        <div className="accordion-title">Требуется заказать</div>
+                                        <div className={`accordion-icon ${lowStockExpanded ? 'expanded' : ''}`}>▼</div>
+                                    </div>
+                                    <div className={`accordion-content ${lowStockExpanded ? 'expanded' : ''}`}>
+                                        {lowStockProducts.length === 0 ? (
+                                            <div className="empty-state">Все остатки в норме</div>
+                                        ) : (
+                                            forecastResults.map(item => (
+                                                <div key={item.id} className="low-stock-item">
+                                                    <div>
+                                                        <div className="low-stock-name">{item.name}</div>
+                                                        <div className="low-stock-details">
+                                                            {item.category} • Осталось на {item.daysRemaining} дней • Нужно: {item.needToOrder} {item.unit}
+                                                        </div>
+                                                    </div>
+                                                    <div className="low-stock-quantity">
+                                                        {item.quantity} {item.unit}
+                                                    </div>
+                                                </div>
+                                            ))
+                                        )}
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     )}
 
-                    {/* Bottom Navigation */}
+                    {/* Bottom Nav */}
                     <div className="bottom-nav">
-                        <button
-                            className={`nav-item ${currentTab === 'warehouse' ? 'active' : ''}`}
-                            onClick={() => setCurrentTab('warehouse')}
-                        >
+                        <button className={`nav-item ${currentTab === 'warehouse' ? 'active' : ''}`} onClick={() => setCurrentTab('warehouse')}>
                             Склад
                         </button>
-                        <button
-                            className={`nav-item ${currentTab === 'orders' ? 'active' : ''}`}
-                            onClick={() => setCurrentTab('orders')}
-                        >
+                        <button className={`nav-item ${currentTab === 'orders' ? 'active' : ''}`} onClick={() => setCurrentTab('orders')}>
                             Закупки
                         </button>
-                        <button
-                            className={`nav-item ${currentTab === 'home' ? 'active' : ''}`}
-                            onClick={() => setCurrentTab('home')}
-                        >
+                        <button className={`nav-item ${currentTab === 'home' ? 'active' : ''}`} onClick={() => setCurrentTab('home')}>
                             Главное
                         </button>
                     </div>
 
-                    {/* FAB */}
-                    <button className="fab" onClick={handleQuickOrder}>+</button>
-
-                    {/* Quick Order Modal */}
-                    {showQuickOrder && (
-                        <div className="modal-overlay" onClick={() => setShowQuickOrder(false)}>
+                    {/* Order Modal */}
+                    {showOrderModal && (
+                        <div className="modal-overlay" onClick={() => setShowOrderModal(false)}>
                             <div className="modal" onClick={(e) => e.stopPropagation()}>
                                 <div className="modal-header">
-                                    <div className="modal-title">Быстрый заказ</div>
-                                    <button className="modal-close" onClick={() => setShowQuickOrder(false)}>×</button>
+                                    <div className="modal-title">Создать заказ</div>
+                                    <button className="modal-close" onClick={() => setShowOrderModal(false)}>×</button>
                                 </div>
                                 <div className="modal-body">
-                                    {lowStockProducts.length === 0 ? (
-                                        <div className="empty-text">Нет продуктов с низкими остатками</div>
-                                    ) : (
-                                        <>
-                                            <p style={{marginBottom: '20px', color: 'var(--text-secondary)'}}>
-                                                Продукты с низкими остатками будут добавлены в заказ
-                                            </p>
-                                            {lowStockProducts.map(p => (
-                                                <div key={p.id} style={{marginBottom: '12px', padding: '12px', background: 'var(--bg-main)', borderRadius: '8px'}}>
-                                                    <strong>{p.name}</strong> - {p.quantity} {p.unit}
+                                    <div className="search-box">
+                                        <input
+                                            type="text"
+                                            className="search-input"
+                                            placeholder="Поиск товаров..."
+                                            value={searchQuery}
+                                            onChange={(e) => setSearchQuery(e.target.value)}
+                                        />
+                                    </div>
+
+                                    <div className="quick-select">
+                                        <div className="quick-select-title">Быстрый выбор:</div>
+                                        <div className="quick-chips">
+                                            {products.slice(0, 6).map(product => (
+                                                <div
+                                                    key={product.id}
+                                                    className="quick-chip"
+                                                    onClick={() => handleQuickSelect(product.name)}
+                                                >
+                                                    {product.name}
                                                 </div>
                                             ))}
-                                            <button className="btn btn-primary" onClick={() => {
-                                                handleOrderAll();
-                                                setShowQuickOrder(false);
-                                            }}>
-                                                Создать заказ
-                                            </button>
-                                        </>
+                                        </div>
+                                    </div>
+
+                                    <div className="form-group">
+                                        <label className="form-label">Продукт</label>
+                                        <input
+                                            type="text"
+                                            className="form-input"
+                                            value={orderForm.product}
+                                            onChange={(e) => setOrderForm({...orderForm, product: e.target.value})}
+                                            placeholder="Название продукта"
+                                        />
+                                    </div>
+
+                                    <div className="form-row">
+                                        <div className="form-group" style={{flex: 2}}>
+                                            <label className="form-label">Количество</label>
+                                            <input
+                                                type="number"
+                                                className="form-input"
+                                                value={orderForm.quantity}
+                                                onChange={(e) => setOrderForm({...orderForm, quantity: e.target.value})}
+                                                placeholder="0"
+                                            />
+                                        </div>
+                                        <div className="form-group" style={{flex: 1}}>
+                                            <label className="form-label">Единица</label>
+                                            <select
+                                                className="form-select"
+                                                value={orderForm.unit}
+                                                onChange={(e) => setOrderForm({...orderForm, unit: e.target.value})}
+                                            >
+                                                <option value="кг">кг</option>
+                                                <option value="шт">шт</option>
+                                                <option value="л">л</option>
+                                                <option value="г">г</option>
+                                            </select>
+                                        </div>
+                                    </div>
+
+                                    <button className="btn btn-secondary" onClick={handleAddToOrder}>
+                                        + Добавить в заказ
+                                    </button>
+
+                                    {currentOrder.length > 0 && (
+                                        <div className="current-order">
+                                            <div className="current-order-title">Текущий заказ:</div>
+                                            {currentOrder.map(item => (
+                                                <div key={item.id} className="current-order-item">
+                                                    <span>• {item.product} - {item.quantity} {item.unit}</span>
+                                                    <button
+                                                        onClick={() => handleRemoveFromOrder(item.id)}
+                                                        style={{background: 'none', border: 'none', color: 'var(--danger)', cursor: 'pointer'}}
+                                                    >
+                                                        ✕
+                                                    </button>
+                                                </div>
+                                            ))}
+                                        </div>
                                     )}
+
+                                    <button className="btn btn-primary" onClick={handleCreateOrder}>
+                                        Создать заказ
+                                    </button>
                                 </div>
                             </div>
                         </div>
